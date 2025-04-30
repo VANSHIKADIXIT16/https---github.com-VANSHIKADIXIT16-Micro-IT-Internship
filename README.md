@@ -52,6 +52,10 @@ A fun web-based Tic Tac Toe game where you can play as '🎀' against the comput
 - **Winning Combos**: The game checks for winning conditions after each move.
 - **Draw Detection**: The game detects if there is no winner and announces a draw.
 
+## The visuals of the game
+
+![Calculator Preview](calculator.png)
+
 ## How to Run
 
 1. Clone the repository:
@@ -69,4 +73,3 @@ cd Micro-IT-Internship
 
 Open the calculator.html file in your browser
 
-![Calculator Preview](calculator.png)
