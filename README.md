@@ -54,7 +54,7 @@ A fun web-based Tic Tac Toe game where you can play as '🎀' against the comput
 
 ## The visuals of the game
 
-![Calculator Preview](calculator.png)
+![Calculator Preview](tic_tac_toe.png)
 
 ## How to Run
 
