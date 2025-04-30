@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tic Tac Toe 🎀💣</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #b3d9ff; /* pastel baby blue */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      height: 100vh;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 2rem;
+    }
+    #mode-buttons {
+      margin: 15px;
+    }
+    #mode-buttons button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin: 0 10px;
+      border-radius: 10px;
+      border: none;
+      background-color: #dcedc1;
+      cursor: pointer;
+    }
+    #game {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      margin: 10px;
+      background-color: #ffebcc; /* Light orange for the board */
+      border-radius: 10px;
+    }
+    .cell {
+      background-color: #e3f2fd;
+      border: 5px solid green;
+      border-style: dotted;
+      border-radius: 20px;
+      font-size: 2.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: default; /* Hide the pointer cursor */
+      transition: background-color 0.3s;
+    }
+    #status {
+      margin: 10px;
+      font-size: 1.2rem;
+    }
+    #scoreboard {
+      background-color: #f9f9c5; /* Light yellow for scoreboard */
+      padding: 10px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-around;
+      width: 300px;
+      margin-bottom: 10px;
+    }
+    #scoreboard div {
+      font-size: 1.5rem;
+    }
+    .confetti {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.1);
+      display: none;
+      pointer-events: none;
+    }
+    .confetti div {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #ff5722;
+      animation: confetti-fall 1s infinite;
+    }
+    @keyframes confetti-fall {
+      0% { top: -10px; }
+      100% { top: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe 🎀 vs 💣</h1>
+  <div id="mode-buttons">
+    <button onclick="setMode('player')">2 Player Mode</button>
+    <button onclick="setMode('computer')">Play vs Computer</button>
+  </div>
+
+  <div id="scoreboard">
+    <div id="user-score">🎀: 0</div>
+    <div id="computer-score">💣: 0</div>
+  </div>
+
+  <div id="status">Choose a mode to start</div>
+  <div id="game"></div>
+
+  <div id="message"></div>
+
+  <div class="confetti" id="confetti"></div>
+
+  <script>
+    const game = document.getElementById('game');
+    const statusText = document.getElementById('status');
+    const userScoreElem = document.getElementById('user-score');
+    const computerScoreElem = document.getElementById('computer-score');
+    const messageElem = document.getElementById('message');
+    const confettiElem = document.getElementById('confetti');
+    const cells = [];
+    let currentPlayer = '🎀';
+    let gameActive = false;
+    let mode = null;
+    let userScore = 0;
+    let computerScore = 0;
+
+    const winningCombos = [
+      [0,1,2], [3,4,5], [6,7,8],
+      [0,3,6], [1,4,7], [2,5,8],
+      [0,4,8], [2,4,6]
+    ];
+
+    function setMode(selectedMode) {
+      mode = selectedMode;
+      resetGame();
+      gameActive = true;
+      statusText.textContent = `Your Turn: 🎀 (${mode === 'computer' ? 'vs Computer' : '2 Players'})`;
+      messageElem.textContent = '';
+      confettiElem.style.display = 'none';
+    }
+
+    function checkWinner(board = cells.map(c => c.textContent)) {
+      for (let combo of winningCombos) {
+        const [a, b, c] = combo;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+      if (board.every(cell => cell)) return 'draw';
+      return null;
+    }
+
+    function computerMove() {
+      const bestMove = minimax(cells.map(c => c.textContent), '💣').index;
+      if (bestMove !== undefined && gameActive) {
+        cells[bestMove].textContent = '💣';
+        if (!handlePostMove()) {
+          currentPlayer = '🎀';
+          statusText.textContent = `Your Turn: 🎀`;
+        }
+      }
+    }
+
+    function handleClick(e) {
+      const cell = e.target;
+      if (!gameActive || cell.textContent) return;
+
+      if (mode === 'player') {
+        cell.textContent = currentPlayer;
+        if (!handlePostMove()) {
+          currentPlayer = currentPlayer === '🎀' ? '💣' : '🎀';
+          statusText.textContent = `Current Turn: ${currentPlayer}`;
+        }
+      } else if (mode === 'computer' && currentPlayer === '🎀') {
+        cell.textContent = '🎀';
+        if (!handlePostMove()) {
+          currentPlayer = '💣';
+          setTimeout(() => computerMove(), 300);
+        }
+      }
+    }
+
+    function handlePostMove() {
+      const winner = checkWinner();
+      if (winner) {
+        gameActive = false;
+        if (winner === 'draw') {
+          statusText.textContent = "It's a Draw! 🤝";
+        } else {
+          if (winner === '🎀') {
+            userScore++;
+            userScoreElem.textContent = `🎀: ${userScore}`;
+            statusText.textContent = `${winner} Wins! 🎉`;
+            showConfetti();
+          } else {
+            computerScore++;
+            computerScoreElem.textContent = `💣: ${computerScore}`;
+            statusText.textContent = `${winner} Wins! 🎉`;
+            messageElem.innerHTML = `Don't worry, You gonna win next time! 🍫`;
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function showConfetti() {
+      confettiElem.style.display = 'block';
+      setTimeout(() => confettiElem.style.display = 'none', 3000);
+    }
+
+    function resetGame() {
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.style.background = '#e3f2fd';
+      });
+      currentPlayer = '🎀';
+      gameActive = true;
+      if (mode) {
+        statusText.textContent = `Your Turn: 🎀 (${mode === 'computer' ? 'vs Computer' : '2 Players'})`;
+      } else {
+        statusText.textContent = "Choose a mode to start";
+      }
+    }
+
+    function minimax(newBoard, player) {
+      const availSpots = newBoard.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+      const opponent = player === '💣' ? '🎀' : '💣';
+      const winner = checkWinner(newBoard);
+
+      if (winner === '💣') return { score: 10 };
+      if (winner === '🎀') return { score: -10 };
+      if (winner === 'draw') return { score: 0 };
+
+      const moves = [];
+
+      for (let i = 0; i < availSpots.length; i++) {
+        const move = {};
+        move.index = availSpots[i];
+        newBoard[move.index] = player;
+
+        const result = minimax(newBoard, opponent);
+        move.score = result.score;
+
+        newBoard[move.index] = '';
+        moves.push(move);
+      }
+
+      let bestMove;
+      if (player === '💣') {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score > bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score < bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      }
+
+      return moves[bestMove];
+    }
+
+    // Build board
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.addEventListener('click', handleClick);
+      game.appendChild(cell);
+      cells.push(cell);
+    }
+  </script>
+</body>
+</html>
